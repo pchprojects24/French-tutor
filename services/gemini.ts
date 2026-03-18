@@ -1,10 +1,65 @@
 import { GoogleGenAI, Modality, Type } from "@google/genai";
-import { Flashcard } from "../types";
+import { Flashcard, QuizQuestion, DictionaryEntry } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+const apiKey = process.env.GEMINI_API_KEY || '';
+const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+
+const demoFlashcards: Flashcard[] = [
+  { id: 'demo-1', french: 'Bonjour', english: 'Hello', pronunciation: 'bohn-zhoor', category: 'Greetings', difficulty: 'beginner' },
+  { id: 'demo-2', french: 'Merci beaucoup', english: 'Thank you very much', pronunciation: 'mehr-see boh-koo', category: 'Politeness', difficulty: 'beginner' },
+  { id: 'demo-3', french: "Où sont les toilettes ?", english: 'Where is the restroom?', pronunciation: 'oo sohn lay twah-let', category: 'Travel', difficulty: 'beginner' },
+  { id: 'demo-4', french: "Je voudrais un café", english: 'I would like a coffee', pronunciation: 'zhuh voo-dray uh kah-fay', category: 'Café', difficulty: 'beginner' },
+  { id: 'demo-5', french: "Parlez-vous anglais ?", english: 'Do you speak English?', pronunciation: 'par-lay voo zahng-glay', category: 'Conversation', difficulty: 'beginner' },
+];
+
+const demoQuiz: QuizQuestion[] = [
+  {
+    id: 'quiz-1',
+    question: "How do you say 'Thank you' in French?",
+    options: ['Bonjour', 'Merci', 'Au revoir', "S'il vous plaît"],
+    correctAnswer: 'Merci',
+    explanation: "Merci means 'thank you'; \"S'il vous plaît\" means 'please'.",
+    type: 'multiple-choice',
+  },
+  {
+    id: 'quiz-2',
+    question: "Translate to English: 'Je suis étudiant.'",
+    options: ['I am a student.', 'I am tired.', 'I am hungry.', 'I am lost.'],
+    correctAnswer: 'I am a student.',
+    explanation: "'Je suis' = 'I am'; 'étudiant' = 'student'.",
+    type: 'translation',
+  },
+  {
+    id: 'quiz-3',
+    question: "Which phrase politely asks someone to repeat?",
+    options: ["Répétez, s'il vous plaît.", 'Enchanté.', 'À bientôt.', 'De rien.'],
+    correctAnswer: "Répétez, s'il vous plaît.",
+    explanation: "It literally means 'Repeat, please.'",
+    type: 'multiple-choice',
+  },
+];
+
+const demoDictionaryEntry: DictionaryEntry = {
+  word: 'amour',
+  translation: 'love',
+  definition: "Sentiment d'affection profonde pour quelqu'un ou quelque chose.",
+  examples: [
+    "L'amour est plus fort que tout. - Love is stronger than anything.",
+    "Ils ont déclaré leur amour au bord de la Seine. - They declared their love by the Seine."
+  ],
+};
 
 export const geminiService = {
   async generateFlashcards(category: string, count: number = 5): Promise<Flashcard[]> {
+    if (!ai) {
+      console.warn('GEMINI_API_KEY missing - serving demo flashcards.');
+      return demoFlashcards.map((card, i) => ({
+        ...card,
+        category,
+        id: `${card.id}-${i}`,
+      })).slice(0, count);
+    }
+
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Generate ${count} French flashcards for the category: ${category}. Include the French word/phrase, English translation, and a phonetic pronunciation guide. Return as JSON.`,
@@ -32,6 +87,15 @@ export const geminiService = {
   },
 
   async generateQuiz(category: string, count: number = 5): Promise<QuizQuestion[]> {
+    if (!ai) {
+      console.warn('GEMINI_API_KEY missing - serving demo quiz.');
+      return demoQuiz.map((quiz, i) => ({
+        ...quiz,
+        id: `${quiz.id}-${i}`,
+        question: `${quiz.question} (${category})`,
+      })).slice(0, count);
+    }
+
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Generate a ${count}-question French quiz for the category: ${category}. Include multiple choice questions with 4 options each. Return as JSON.`,
@@ -59,6 +123,11 @@ export const geminiService = {
   },
 
   async generateGrammarTip(topic: string): Promise<string> {
+    if (!ai) {
+      console.warn('GEMINI_API_KEY missing - serving demo grammar tip.');
+      return `### ${topic}\n\n- Use **le/la/les** with known items: *la table*, *le livre*.\n- Use **un/une/des** for something unspecified: *une idée*, *des amis*.\n- Remember elision: **l'** before vowels, e.g., *l'ecole*.\n\n_Practice_: Écrivez deux phrases avec **un** et **le** pour ${topic.toLowerCase()}.`;
+    }
+
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Provide a concise and helpful French grammar tip about: ${topic}. Use Markdown formatting. Include examples.`,
@@ -67,6 +136,11 @@ export const geminiService = {
   },
 
   async lookupWord(word: string): Promise<DictionaryEntry> {
+    if (!ai) {
+      console.warn('GEMINI_API_KEY missing - serving demo dictionary entry.');
+      return { ...demoDictionaryEntry, word };
+    }
+
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Look up the French word: "${word}". Provide its English translation, a brief definition, and 2 example sentences in French with translations. Return as JSON.`,
@@ -88,6 +162,11 @@ export const geminiService = {
   },
 
   async getTutorResponse(message: string, history: { role: 'user' | 'model', parts: { text: string }[] }[]) {
+    if (!ai) {
+      console.warn('GEMINI_API_KEY missing - serving demo tutor reply.');
+      return `Bien sûr ! Tu as dit: "${message}". Continue en français et je corrigerai doucement si besoin.`;
+    }
+
     const chat = ai.chats.create({
       model: "gemini-3-flash-preview",
       config: {
@@ -103,6 +182,11 @@ export const geminiService = {
   },
 
   async speak(text: string): Promise<string | undefined> {
+    if (!ai) {
+      console.warn('GEMINI_API_KEY missing - skipping TTS.');
+      return undefined;
+    }
+
     try {
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash-preview-tts",

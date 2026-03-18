@@ -32,4 +32,11 @@ export interface DictionaryEntry {
   examples: string[];
 }
 
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'model';
+  text: string;
+  timestamp: number;
+}
+
 export type AppView = 'dashboard' | 'flashcards' | 'tutor' | 'pronunciation' | 'quiz' | 'grammar' | 'favorites' | 'dictionary' | 'settings';
