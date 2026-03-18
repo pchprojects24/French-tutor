@@ -1,0 +1,5 @@
+{
+  "name": "L'Atelier Français",
+  "description": "An immersive French language learning companion featuring AI-powered conversation practice, vocabulary flashcards, and real-time pronunciation support.",
+  "requestFramePermissions": ["microphone"]
+}
