@@ -303,11 +303,23 @@ export default function App() {
       const base64 = await geminiService.speak(text);
       if (base64) {
         const audio = new Audio(`data:audio/mp3;base64,${base64}`);
-        audio.play();
+        // Ensure audio plays on mobile devices
+        audio.addEventListener('canplaythrough', () => {
+          audio.play().catch((error) => {
+            console.warn('Audio playback failed:', error);
+            // On mobile, audio might need user interaction first
+          });
+        });
+        audio.addEventListener('ended', () => {
+          setAudioLoading(null);
+        });
+        audio.load();
+      } else {
+        // No audio available (demo mode)
+        setAudioLoading(null);
       }
     } catch (error) {
-      console.error(error);
-    } finally {
+      console.error('Audio error:', error);
       setAudioLoading(null);
     }
   };
@@ -316,8 +328,8 @@ export default function App() {
     <div className="space-y-8">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-2">
-          <h1 className="text-5xl font-serif gradient-text font-bold">Bonjour!</h1>
-          <p className="text-lg text-brand-ink/60">Ready to continue your French journey?</p>
+          <h1 className="text-3xl md:text-5xl font-serif gradient-text font-bold">Bonjour!</h1>
+          <p className="text-base md:text-lg text-brand-ink/60">Ready to continue your French journey?</p>
         </div>
         <div className="flex gap-4">
           <div className="gradient-card px-6 py-3 flex items-center gap-3 pulse-glow">
@@ -359,7 +371,7 @@ export default function App() {
         <p className="mt-4 text-sm opacity-80">You're 150 XP away from your daily goal. Keep going!</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <motion.button
           onClick={() => setView('flashcards')}
           className="gradient-card p-6 text-left hover:scale-105 transition-all group"
@@ -622,7 +634,7 @@ export default function App() {
 
   const renderFlashcards = () => (
     <div className="max-w-2xl mx-auto space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <motion.button
           onClick={() => setView('dashboard')}
           className="text-brand-clay flex items-center gap-2 hover:underline"
@@ -630,12 +642,12 @@ export default function App() {
         >
           <RotateCcw size={18} /> Back
         </motion.button>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {['Common', 'Food', 'Travel', 'Work'].map(cat => (
             <motion.button
               key={cat}
               onClick={() => loadFlashcards(cat)}
-              className="px-4 py-1 rounded-full border border-brand-clay/30 text-sm bg-white/50 hover:gradient-bg hover:text-white hover:border-transparent transition-all"
+              className="px-3 py-2 md:px-4 md:py-1 rounded-full border border-brand-clay/30 text-xs md:text-sm bg-white/50 hover:gradient-bg hover:text-white hover:border-transparent transition-all min-h-[36px]"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -645,7 +657,7 @@ export default function App() {
         </div>
       </div>
 
-      <div className="relative h-[400px] perspective-1000">
+      <div className="relative min-h-[300px] md:h-[400px] perspective-1000">
         <AnimatePresence mode="wait">
           {isLoading ? (
             <motion.div
@@ -697,14 +709,23 @@ export default function App() {
                         <Heart fill={favorites.find(f => f.id === flashcards[currentCardIndex].id) ? "currentColor" : "none"} size={20} />
                       </motion.button>
                     </div>
-                    <h2 className="text-5xl font-serif gradient-text font-bold">{flashcards[currentCardIndex].french}</h2>
+                    <h2 className="text-3xl md:text-5xl font-serif gradient-text font-bold">{flashcards[currentCardIndex].french}</h2>
                     <motion.button
                       onClick={(e) => { e.stopPropagation(); playAudio(flashcards[currentCardIndex].french); }}
-                      className="p-3 bg-gradient-to-br from-brand-purple to-brand-blue rounded-full text-white shadow-lg"
+                      disabled={audioLoading === flashcards[currentCardIndex].french}
+                      className="p-4 bg-gradient-to-br from-brand-purple to-brand-blue rounded-full text-white shadow-lg min-w-[48px] min-h-[48px] flex items-center justify-center disabled:opacity-50"
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                     >
-                      <Volume2 size={24} />
+                      {audioLoading === flashcards[currentCardIndex].french ? (
+                        <motion.div
+                          className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        />
+                      ) : (
+                        <Volume2 size={24} />
+                      )}
                     </motion.button>
                   </div>
                 ) : (
@@ -990,7 +1011,7 @@ export default function App() {
   );
 
   const renderTutor = () => (
-    <div className="max-w-3xl mx-auto h-[calc(100vh-12rem)] flex flex-col gradient-card overflow-hidden">
+    <div className="max-w-3xl mx-auto min-h-[500px] md:h-[calc(100vh-12rem)] flex flex-col gradient-card overflow-hidden">
       <div className="p-6 border-b border-brand-clay/10 flex items-center justify-between bg-white/50">
         <div className="flex items-center gap-4">
           <motion.div
@@ -1170,7 +1191,7 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen p-6 md:p-12 max-w-6xl mx-auto">
+    <div className="min-h-screen p-4 md:p-6 lg:p-12 max-w-6xl mx-auto">
       <Confetti show={showConfetti} onComplete={() => setShowConfetti(false)} />
 
       {showCelebration && (
@@ -1187,18 +1208,19 @@ export default function App() {
         </motion.div>
       )}
 
-      <nav className="flex justify-between items-center mb-12">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center text-white">
-            <Languages size={24} />
+      <nav className="flex justify-between items-center mb-8 md:mb-12">
+        <div className="flex items-center gap-2 md:gap-3">
+          <div className="w-8 h-8 md:w-10 md:h-10 gradient-bg rounded-xl flex items-center justify-center text-white">
+            <Languages size={20} className="md:hidden" />
+            <Languages size={24} className="hidden md:block" />
           </div>
-          <span className="text-2xl font-serif font-bold tracking-tight gradient-text">L'Atelier Français</span>
+          <span className="text-xl md:text-2xl font-serif font-bold tracking-tight gradient-text">L'Atelier Français</span>
         </div>
-        <div className="flex gap-4">
+        <div className="flex gap-2 md:gap-4">
           <motion.button
             onClick={() => setView('dashboard')}
             className={cn(
-              "p-2 rounded-lg transition-colors",
+              "p-2 md:p-2 rounded-lg transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center",
               view === 'dashboard' ? "gradient-bg text-white" : "text-brand-ink/40 hover:bg-brand-olive/10"
             )}
             whileHover={{ scale: 1.1 }}
@@ -1206,7 +1228,7 @@ export default function App() {
           >
             <LayoutDashboard size={20} />
           </motion.button>
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-clay to-brand-purple flex items-center justify-center text-white font-bold">
+          <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-brand-clay to-brand-purple flex items-center justify-center text-white font-bold text-xs md:text-sm">
             PF
           </div>
         </div>
