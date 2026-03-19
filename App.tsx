@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  BookOpen, 
-  MessageCircle, 
-  Mic2, 
-  LayoutDashboard, 
-  ChevronRight, 
-  Volume2, 
+import {
+  BookOpen,
+  MessageCircle,
+  Mic2,
+  LayoutDashboard,
+  ChevronRight,
+  Volume2,
   RotateCcw,
   Sparkles,
   GraduationCap,
@@ -21,7 +21,10 @@ import {
   Search,
   Settings,
   Trash2,
-  Info
+  Info,
+  Star,
+  Zap,
+  Flame
 } from 'lucide-react';
 import { AppView, Flashcard, ChatMessage, QuizQuestion, UserStats, DictionaryEntry } from './types';
 import { geminiService } from './services/gemini';
@@ -32,6 +35,53 @@ import ReactMarkdown from 'react-markdown';
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+// Confetti Component
+const Confetti = ({ show, onComplete }: { show: boolean; onComplete: () => void }) => {
+  const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; color: string; rotation: number }>>([]);
+
+  useEffect(() => {
+    if (show) {
+      const newParticles = Array.from({ length: 50 }, (_, i) => ({
+        id: i,
+        x: Math.random() * 100,
+        y: -10,
+        color: ['#EC4899', '#8B5CF6', '#3B82F6', '#10B981', '#FBBF24', '#F97316'][Math.floor(Math.random() * 6)],
+        rotation: Math.random() * 360
+      }));
+      setParticles(newParticles);
+      setTimeout(onComplete, 3000);
+    }
+  }, [show, onComplete]);
+
+  if (!show) return null;
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-50">
+      {particles.map((particle) => (
+        <motion.div
+          key={particle.id}
+          className="absolute w-3 h-3 rounded-full"
+          style={{
+            backgroundColor: particle.color,
+            left: `${particle.x}%`,
+            top: `${particle.y}%`,
+          }}
+          initial={{ y: -100, opacity: 1, rotate: particle.rotation }}
+          animate={{
+            y: window.innerHeight + 100,
+            opacity: 0,
+            rotate: particle.rotation + 360,
+          }}
+          transition={{
+            duration: 2 + Math.random(),
+            ease: 'easeIn',
+          }}
+        />
+      ))}
+    </div>
+  );
+};
 
 export default function App() {
   const safeParse = <T,>(value: string | null, fallback: T): T => {
@@ -67,6 +117,9 @@ export default function App() {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [audioLoading, setAudioLoading] = useState<string | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationMessage, setCelebrationMessage] = useState('');
 
   const [stats, setStats] = useState<UserStats>(() => {
     return safeParse<UserStats>(localStorage.getItem('french_stats'), {
@@ -106,6 +159,15 @@ export default function App() {
     setStats(prev => {
       const newXP = prev.xp + amount;
       const newLevel = Math.floor(newXP / 500) + 1;
+      const leveledUp = newLevel > prev.level;
+
+      if (leveledUp) {
+        setShowConfetti(true);
+        setCelebrationMessage(`🎉 Level ${newLevel} Unlocked!`);
+        setShowCelebration(true);
+        setTimeout(() => setShowCelebration(false), 3000);
+      }
+
       return { ...prev, xp: newXP, level: newLevel };
     });
   };
@@ -199,6 +261,7 @@ export default function App() {
       setShowExplanation(false);
     } else {
       setQuizFinished(true);
+      setShowConfetti(true);
       addXP(50); // Bonus for finishing
     }
   };
@@ -253,19 +316,19 @@ export default function App() {
     <div className="space-y-8">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-2">
-          <h1 className="text-5xl font-serif text-brand-olive italic">Bonjour!</h1>
+          <h1 className="text-5xl font-serif gradient-text font-bold">Bonjour!</h1>
           <p className="text-lg text-brand-ink/60">Ready to continue your French journey?</p>
         </div>
         <div className="flex gap-4">
-          <div className="glass-card px-6 py-3 flex items-center gap-3">
+          <div className="gradient-card px-6 py-3 flex items-center gap-3 pulse-glow">
             <Trophy className="text-brand-clay" size={20} />
             <div>
               <p className="text-[10px] uppercase tracking-widest opacity-50">Level {stats.level}</p>
               <p className="font-bold">{stats.xp} XP</p>
             </div>
           </div>
-          <div className="glass-card px-6 py-3 flex items-center gap-3">
-            <Sparkles className="text-amber-500" size={20} />
+          <div className="gradient-card px-6 py-3 flex items-center gap-3">
+            <Flame className="text-brand-orange" size={20} />
             <div>
               <p className="text-[10px] uppercase tracking-widest opacity-50">Streak</p>
               <p className="font-bold">{stats.streak} Days</p>
@@ -274,9 +337,9 @@ export default function App() {
         </div>
       </header>
 
-      <div className="glass-card p-8 bg-brand-olive text-white">
+      <div className="gradient-card p-8 gradient-bg text-white shine-effect">
         <div className="flex justify-between items-start mb-6">
-          <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+          <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center float">
             <Sparkles className="text-white" />
           </div>
           <span className="text-xs uppercase tracking-widest opacity-60">Daily Goal</span>
@@ -286,99 +349,120 @@ export default function App() {
           <span className="text-sm opacity-80">350 / 500 XP</span>
         </div>
         <div className="w-full bg-white/20 h-3 rounded-full overflow-hidden">
-          <div className="bg-white h-full transition-all duration-1000" style={{ width: '70%' }} />
+          <motion.div
+            className="bg-white h-full"
+            initial={{ width: 0 }}
+            animate={{ width: '70%' }}
+            transition={{ duration: 1, ease: 'easeOut' }}
+          />
         </div>
         <p className="mt-4 text-sm opacity-80">You're 150 XP away from your daily goal. Keep going!</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <button 
+        <motion.button
           onClick={() => setView('flashcards')}
-          className="glass-card p-6 text-left hover:bg-white transition-all group"
+          className="gradient-card p-6 text-left hover:scale-105 transition-all group"
+          whileHover={{ y: -5 }}
+          whileTap={{ scale: 0.95 }}
         >
-          <div className="w-10 h-10 bg-brand-olive/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <BookOpen className="text-brand-olive" size={20} />
+          <div className="w-10 h-10 bg-gradient-to-br from-brand-purple to-brand-blue rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <BookOpen className="text-white" size={20} />
           </div>
           <h3 className="text-xl mb-1">Vocabulary</h3>
           <p className="text-brand-ink/50 text-xs">AI Flashcards</p>
-        </button>
+        </motion.button>
 
-        <button 
+        <motion.button
           onClick={() => setView('quiz')}
-          className="glass-card p-6 text-left hover:bg-white transition-all group"
+          className="gradient-card p-6 text-left hover:scale-105 transition-all group"
+          whileHover={{ y: -5 }}
+          whileTap={{ scale: 0.95 }}
         >
-          <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <BrainCircuit className="text-amber-700" size={20} />
+          <div className="w-10 h-10 bg-gradient-to-br from-brand-yellow to-brand-orange rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <BrainCircuit className="text-white" size={20} />
           </div>
           <h3 className="text-xl mb-1">Quiz</h3>
           <p className="text-brand-ink/50 text-xs">Test Knowledge</p>
-        </button>
+        </motion.button>
 
-        <button 
+        <motion.button
           onClick={() => setView('tutor')}
-          className="glass-card p-6 text-left hover:bg-white transition-all group"
+          className="gradient-card p-6 text-left hover:scale-105 transition-all group"
+          whileHover={{ y: -5 }}
+          whileTap={{ scale: 0.95 }}
         >
-          <div className="w-10 h-10 bg-brand-clay/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <MessageCircle className="text-brand-clay" size={20} />
+          <div className="w-10 h-10 bg-gradient-to-br from-brand-clay to-brand-purple rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <MessageCircle className="text-white" size={20} />
           </div>
           <h3 className="text-xl mb-1">AI Tutor</h3>
           <p className="text-brand-ink/50 text-xs">Chat Practice</p>
-        </button>
+        </motion.button>
 
-        <button 
+        <motion.button
           onClick={() => setView('dictionary')}
-          className="glass-card p-6 text-left hover:bg-white transition-all group"
+          className="gradient-card p-6 text-left hover:scale-105 transition-all group"
+          whileHover={{ y: -5 }}
+          whileTap={{ scale: 0.95 }}
         >
-          <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <Search className="text-blue-700" size={20} />
+          <div className="w-10 h-10 bg-gradient-to-br from-brand-blue to-brand-green rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <Search className="text-white" size={20} />
           </div>
           <h3 className="text-xl mb-1">Dictionary</h3>
           <p className="text-brand-ink/50 text-xs">Word Lookup</p>
-        </button>
+        </motion.button>
 
-        <button 
+        <motion.button
           onClick={() => setView('grammar')}
-          className="glass-card p-6 text-left hover:bg-white transition-all group"
+          className="gradient-card p-6 text-left hover:scale-105 transition-all group"
+          whileHover={{ y: -5 }}
+          whileTap={{ scale: 0.95 }}
         >
-          <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <Lightbulb className="text-indigo-700" size={20} />
+          <div className="w-10 h-10 bg-gradient-to-br from-brand-purple to-brand-clay rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <Lightbulb className="text-white" size={20} />
           </div>
           <h3 className="text-xl mb-1">Grammar</h3>
           <p className="text-brand-ink/50 text-xs">Quick Lessons</p>
-        </button>
+        </motion.button>
 
-        <button 
+        <motion.button
           onClick={() => setView('pronunciation')}
-          className="glass-card p-6 text-left hover:bg-white transition-all group"
+          className="gradient-card p-6 text-left hover:scale-105 transition-all group"
+          whileHover={{ y: -5 }}
+          whileTap={{ scale: 0.95 }}
         >
-          <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <Mic2 className="text-emerald-700" size={20} />
+          <div className="w-10 h-10 bg-gradient-to-br from-brand-green to-brand-blue rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <Mic2 className="text-white" size={20} />
           </div>
           <h3 className="text-xl mb-1">Pronunciation</h3>
           <p className="text-brand-ink/50 text-xs">Accent Lab</p>
-        </button>
+        </motion.button>
 
-        <button 
+        <motion.button
           onClick={() => setView('favorites')}
-          className="glass-card p-6 text-left hover:bg-white transition-all group"
+          className="gradient-card p-6 text-left hover:scale-105 transition-all group"
+          whileHover={{ y: -5 }}
+          whileTap={{ scale: 0.95 }}
         >
-          <div className="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <Heart className="text-rose-700" size={20} />
+          <div className="w-10 h-10 bg-gradient-to-br from-brand-clay to-brand-orange rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <Heart className="text-white" size={20} />
           </div>
           <h3 className="text-xl mb-1">Favorites</h3>
           <p className="text-brand-ink/50 text-xs">Saved Phrases</p>
-        </button>
+        </motion.button>
 
-        <button 
+        <motion.button
           onClick={() => setView('settings')}
-          className="glass-card p-6 text-left hover:bg-white transition-all group"
+          className="gradient-card p-6 text-left hover:scale-105 transition-all group"
+          whileHover={{ y: -5 }}
+          whileTap={{ scale: 0.95 }}
         >
-          <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <Settings className="text-slate-700" size={20} />
+          <div className="w-10 h-10 bg-gradient-to-br from-brand-olive to-brand-purple rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <Settings className="text-white" size={20} />
           </div>
           <h3 className="text-xl mb-1">Settings</h3>
           <p className="text-brand-ink/50 text-xs">App Config</p>
-        </button>
+        </motion.button>
       </div>
     </div>
   );
@@ -629,19 +713,46 @@ export default function App() {
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-olive"></div>
         </div>
       ) : quizFinished ? (
-        <motion.div 
+        <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="glass-card p-12 text-center space-y-6"
+          className="gradient-card p-12 text-center space-y-6 bounce-in"
         >
-          <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto text-amber-600">
-            <Trophy size={40} />
+          <motion.div
+            className="w-20 h-20 bg-gradient-to-br from-brand-yellow to-brand-orange rounded-full flex items-center justify-center mx-auto"
+            animate={{ rotate: [0, 10, -10, 10, 0] }}
+            transition={{ duration: 0.5, repeat: 3 }}
+          >
+            <Trophy className="text-white" size={40} />
+          </motion.div>
+          <h2 className="text-4xl font-serif gradient-text">Quiz Complete!</h2>
+          <p className="text-xl">You scored <span className="font-bold text-brand-clay">{quizScore}</span> out of {quizQuestions.length}</p>
+          <div className="flex justify-center gap-2">
+            {Array.from({ length: quizQuestions.length }).map((_, i) => (
+              <Star
+                key={i}
+                className={i < quizScore ? "text-brand-yellow fill-brand-yellow" : "text-brand-ink/20"}
+                size={24}
+              />
+            ))}
           </div>
-          <h2 className="text-4xl font-serif">Quiz Complete!</h2>
-          <p className="text-xl">You scored <span className="font-bold text-brand-olive">{quizScore}</span> out of {quizQuestions.length}</p>
           <div className="flex justify-center gap-4">
-            <button onClick={() => loadQuiz('General')} className="px-8 py-3 bg-brand-olive text-white rounded-xl">Try Again</button>
-            <button onClick={() => setView('dashboard')} className="px-8 py-3 glass-card rounded-xl">Dashboard</button>
+            <motion.button
+              onClick={() => loadQuiz('General')}
+              className="px-8 py-3 gradient-bg text-white rounded-xl font-semibold"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Try Again
+            </motion.button>
+            <motion.button
+              onClick={() => setView('dashboard')}
+              className="px-8 py-3 gradient-card rounded-xl"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Dashboard
+            </motion.button>
           </div>
         </motion.div>
       ) : quizQuestions.length > 0 ? (
@@ -896,24 +1007,42 @@ export default function App() {
 
   return (
     <div className="min-h-screen p-6 md:p-12 max-w-6xl mx-auto">
+      <Confetti show={showConfetti} onComplete={() => setShowConfetti(false)} />
+
+      {showCelebration && (
+        <motion.div
+          className="fixed top-24 left-1/2 -translate-x-1/2 z-50 gradient-bg text-white px-8 py-4 rounded-2xl shadow-2xl bounce-in"
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -100, opacity: 0 }}
+        >
+          <div className="flex items-center gap-3">
+            <Zap className="text-yellow-300" size={24} />
+            <span className="text-xl font-bold">{celebrationMessage}</span>
+          </div>
+        </motion.div>
+      )}
+
       <nav className="flex justify-between items-center mb-12">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-brand-olive rounded-xl flex items-center justify-center text-white">
+          <div className="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center text-white">
             <Languages size={24} />
           </div>
-          <span className="text-2xl font-serif font-bold tracking-tight">L'Atelier Français</span>
+          <span className="text-2xl font-serif font-bold tracking-tight gradient-text">L'Atelier Français</span>
         </div>
         <div className="flex gap-4">
-          <button 
+          <motion.button
             onClick={() => setView('dashboard')}
             className={cn(
               "p-2 rounded-lg transition-colors",
-              view === 'dashboard' ? "bg-brand-olive text-white" : "text-brand-ink/40 hover:bg-brand-olive/10"
+              view === 'dashboard' ? "gradient-bg text-white" : "text-brand-ink/40 hover:bg-brand-olive/10"
             )}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
           >
             <LayoutDashboard size={20} />
-          </button>
-          <div className="w-10 h-10 rounded-full bg-brand-clay/20 flex items-center justify-center text-brand-clay font-bold">
+          </motion.button>
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-clay to-brand-purple flex items-center justify-center text-white font-bold">
             PF
           </div>
         </div>
