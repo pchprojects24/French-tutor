@@ -470,62 +470,75 @@ export default function App() {
   const renderDictionary = () => (
     <div className="max-w-3xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
-        <button onClick={() => setView('dashboard')} className="text-brand-olive flex items-center gap-2 hover:underline">
+        <motion.button
+          onClick={() => setView('dashboard')}
+          className="text-brand-clay flex items-center gap-2 hover:underline"
+          whileHover={{ x: -5 }}
+        >
           <RotateCcw size={18} /> Back
-        </button>
-        <h2 className="text-3xl font-serif">Dictionary</h2>
+        </motion.button>
+        <h2 className="text-3xl font-serif gradient-text">Dictionary</h2>
       </div>
 
       <div className="flex gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-ink/30" size={20} />
-          <input 
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-clay/50" size={20} />
+          <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             placeholder="Search for a French word..."
-            className="w-full bg-white border border-brand-olive/20 rounded-2xl pl-12 pr-4 py-4 focus:outline-none focus:ring-2 focus:ring-brand-olive/20"
+            className="w-full bg-white border-2 border-brand-clay/20 rounded-2xl pl-12 pr-4 py-4 focus:outline-none focus:ring-2 focus:ring-brand-clay/40 focus:border-brand-clay transition-all"
           />
         </div>
-        <button 
+        <motion.button
           onClick={handleSearch}
           disabled={isLoading || !searchQuery.trim()}
-          className="bg-brand-olive text-white px-8 rounded-2xl hover:bg-brand-olive/90 disabled:opacity-50 transition-all"
+          className="gradient-bg text-white px-8 rounded-2xl hover:shadow-xl disabled:opacity-50 transition-all font-semibold"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
           Lookup
-        </button>
+        </motion.button>
       </div>
 
       <AnimatePresence mode="wait">
         {isLoading ? (
-          <motion.div 
+          <motion.div
             key="loading"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="flex justify-center py-20"
           >
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-olive"></div>
+            <motion.div
+              className="h-12 w-12 border-4 border-brand-clay border-t-transparent rounded-full"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            />
           </motion.div>
         ) : dictionaryResult ? (
           <motion.div
             key="result"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="glass-card p-10 space-y-8"
+            initial={{ y: 20, opacity: 0, scale: 0.95 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: -20, opacity: 0, scale: 0.95 }}
+            className="gradient-card p-10 space-y-8"
           >
             <div className="flex justify-between items-start">
               <div className="space-y-2">
-                <h3 className="text-5xl font-serif text-brand-olive">{dictionaryResult.word}</h3>
+                <h3 className="text-5xl font-serif gradient-text font-bold">{dictionaryResult.word}</h3>
                 <p className="text-2xl text-brand-clay font-serif italic">{dictionaryResult.translation}</p>
               </div>
-              <button 
+              <motion.button
                 onClick={() => playAudio(dictionaryResult.word)}
-                className="p-4 bg-brand-olive/10 rounded-full text-brand-olive hover:bg-brand-olive hover:text-white transition-colors"
+                className="p-4 bg-gradient-to-br from-brand-purple to-brand-blue rounded-full text-white shadow-lg"
+                whileHover={{ scale: 1.1, rotate: 10 }}
+                whileTap={{ scale: 0.9 }}
               >
                 <Volume2 size={24} />
-              </button>
+              </motion.button>
             </div>
 
             <div className="space-y-4">
@@ -537,9 +550,15 @@ export default function App() {
               <h4 className="text-xs uppercase tracking-widest text-brand-ink/40 font-bold">Examples</h4>
               <div className="space-y-4">
                 {dictionaryResult.examples.map((ex, i) => (
-                  <div key={i} className="p-4 bg-brand-cream rounded-xl border-l-4 border-brand-olive">
+                  <motion.div
+                    key={i}
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: i * 0.1 }}
+                    className="p-4 bg-gradient-to-r from-brand-purple/10 to-brand-blue/10 rounded-xl border-l-4 border-brand-clay"
+                  >
                     <p className="font-serif text-lg">{ex}</p>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </div>
@@ -604,18 +623,24 @@ export default function App() {
   const renderFlashcards = () => (
     <div className="max-w-2xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
-        <button onClick={() => setView('dashboard')} className="text-brand-olive flex items-center gap-2 hover:underline">
+        <motion.button
+          onClick={() => setView('dashboard')}
+          className="text-brand-clay flex items-center gap-2 hover:underline"
+          whileHover={{ x: -5 }}
+        >
           <RotateCcw size={18} /> Back
-        </button>
+        </motion.button>
         <div className="flex gap-2">
           {['Common', 'Food', 'Travel', 'Work'].map(cat => (
-            <button 
+            <motion.button
               key={cat}
               onClick={() => loadFlashcards(cat)}
-              className="px-4 py-1 rounded-full border border-brand-olive/20 text-sm hover:bg-brand-olive hover:text-white transition-colors"
+              className="px-4 py-1 rounded-full border border-brand-clay/30 text-sm bg-white/50 hover:gradient-bg hover:text-white hover:border-transparent transition-all"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               {cat}
-            </button>
+            </motion.button>
           ))}
         </div>
       </div>
@@ -623,49 +648,64 @@ export default function App() {
       <div className="relative h-[400px] perspective-1000">
         <AnimatePresence mode="wait">
           {isLoading ? (
-            <motion.div 
+            <motion.div
               key="loading"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="absolute inset-0 flex items-center justify-center"
             >
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-olive"></div>
+              <motion.div
+                className="h-12 w-12 border-4 border-brand-clay border-t-transparent rounded-full"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              />
             </motion.div>
           ) : flashcards.length > 0 ? (
             <motion.div
               key={currentCardIndex}
-              initial={{ x: 300, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -300, opacity: 0 }}
+              initial={{ x: 300, opacity: 0, rotateY: -90 }}
+              animate={{ x: 0, opacity: 1, rotateY: 0 }}
+              exit={{ x: -300, opacity: 0, rotateY: 90 }}
+              transition={{ type: "spring", stiffness: 100 }}
               className="absolute inset-0"
               onClick={() => setIsFlipped(!isFlipped)}
             >
-              <div className={cn(
-                "w-full h-full glass-card flex flex-col items-center justify-center p-12 text-center cursor-pointer transition-all duration-500 transform-style-3d",
-                isFlipped && "rotate-y-180"
-              )}>
+              <motion.div
+                className={cn(
+                  "w-full h-full gradient-card flex flex-col items-center justify-center p-12 text-center cursor-pointer transition-all duration-500 transform-style-3d shadow-2xl",
+                  isFlipped && "rotate-y-180"
+                )}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
                 {!isFlipped ? (
                   <div className="space-y-6">
                     <div className="flex justify-between items-center w-full absolute top-8 px-8">
-                      <span className="text-xs uppercase tracking-widest text-brand-olive/60">{flashcards[currentCardIndex].category}</span>
-                      <button 
+                      <span className="text-xs uppercase tracking-widest bg-gradient-to-r from-brand-purple to-brand-blue text-transparent bg-clip-text font-bold">
+                        {flashcards[currentCardIndex].category}
+                      </span>
+                      <motion.button
                         onClick={(e) => { e.stopPropagation(); toggleFavorite(flashcards[currentCardIndex]); }}
                         className={cn(
                           "p-2 rounded-full transition-colors",
                           favorites.find(f => f.id === flashcards[currentCardIndex].id) ? "text-rose-500" : "text-brand-ink/20 hover:text-rose-500"
                         )}
+                        whileHover={{ scale: 1.2, rotate: 10 }}
+                        whileTap={{ scale: 0.9 }}
                       >
                         <Heart fill={favorites.find(f => f.id === flashcards[currentCardIndex].id) ? "currentColor" : "none"} size={20} />
-                      </button>
+                      </motion.button>
                     </div>
-                    <h2 className="text-5xl font-serif">{flashcards[currentCardIndex].french}</h2>
-                    <button 
+                    <h2 className="text-5xl font-serif gradient-text font-bold">{flashcards[currentCardIndex].french}</h2>
+                    <motion.button
                       onClick={(e) => { e.stopPropagation(); playAudio(flashcards[currentCardIndex].french); }}
-                      className="p-3 bg-brand-olive/10 rounded-full text-brand-olive hover:bg-brand-olive hover:text-white transition-colors"
+                      className="p-3 bg-gradient-to-br from-brand-purple to-brand-blue rounded-full text-white shadow-lg"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                     >
                       <Volume2 size={24} />
-                    </button>
+                    </motion.button>
                   </div>
                 ) : (
                   <div className="space-y-6 rotate-y-180">
@@ -674,27 +714,31 @@ export default function App() {
                     <p className="text-brand-ink/40 italic">Phonetic: {flashcards[currentCardIndex].pronunciation}</p>
                   </div>
                 )}
-              </div>
+              </motion.div>
             </motion.div>
           ) : null}
         </AnimatePresence>
       </div>
 
       <div className="flex justify-center gap-4">
-        <button 
+        <motion.button
           disabled={currentCardIndex === 0}
           onClick={() => { setCurrentCardIndex(prev => prev - 1); setIsFlipped(false); }}
-          className="px-8 py-3 glass-card hover:bg-white disabled:opacity-30"
+          className="px-8 py-3 gradient-card hover:shadow-xl disabled:opacity-30 font-semibold"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
           Previous
-        </button>
-        <button 
+        </motion.button>
+        <motion.button
           disabled={currentCardIndex === flashcards.length - 1}
           onClick={() => { setCurrentCardIndex(prev => prev + 1); setIsFlipped(false); }}
-          className="px-8 py-3 glass-card bg-brand-olive text-white hover:bg-brand-olive/90 disabled:opacity-30"
+          className="px-8 py-3 gradient-bg text-white hover:shadow-xl disabled:opacity-30 font-semibold"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
           Next
-        </button>
+        </motion.button>
       </div>
     </div>
   );
@@ -967,10 +1011,13 @@ export default function App() {
   const renderPronunciation = () => (
     <div className="max-w-2xl mx-auto space-y-8 text-center">
       <header className="space-y-4">
-        <div className="w-20 h-20 bg-emerald-100 rounded-3xl flex items-center justify-center mx-auto text-emerald-700">
+        <motion.div
+          className="w-20 h-20 bg-gradient-to-br from-brand-green to-brand-blue rounded-3xl flex items-center justify-center mx-auto text-white shadow-xl float"
+          whileHover={{ scale: 1.1, rotate: 5 }}
+        >
           <Mic2 size={40} />
-        </div>
-        <h2 className="text-4xl font-serif">Pronunciation Lab</h2>
+        </motion.div>
+        <h2 className="text-4xl font-serif gradient-text">Pronunciation Lab</h2>
         <p className="text-brand-ink/60">Listen to the native pronunciation and practice your accent.</p>
       </header>
 
@@ -981,27 +1028,43 @@ export default function App() {
           "Je ne comprends pas",
           "Où sont les toilettes ?",
           "La vie est belle"
-        ].map(phrase => (
-          <div key={phrase} className="glass-card p-6 flex items-center justify-between group hover:bg-white transition-all">
-            <span className="text-2xl font-serif">{phrase}</span>
-            <button 
+        ].map((phrase, idx) => (
+          <motion.div
+            key={phrase}
+            initial={{ x: -50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: idx * 0.1 }}
+            className="gradient-card p-6 flex items-center justify-between group hover:shadow-xl transition-all"
+          >
+            <span className="text-2xl font-serif gradient-text">{phrase}</span>
+            <motion.button
               onClick={() => playAudio(phrase)}
               disabled={audioLoading === phrase}
-              className="p-4 bg-emerald-50 rounded-full text-emerald-700 hover:bg-emerald-700 hover:text-white transition-all disabled:opacity-50"
+              className="p-4 bg-gradient-to-br from-brand-green to-brand-blue rounded-full text-white shadow-lg disabled:opacity-50"
+              whileHover={{ scale: 1.1, rotate: 10 }}
+              whileTap={{ scale: 0.9 }}
             >
               {audioLoading === phrase ? (
-                <div className="w-6 h-6 border-2 border-emerald-700 border-t-transparent rounded-full animate-spin" />
+                <motion.div
+                  className="w-6 h-6 border-2 border-white border-t-transparent rounded-full"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                />
               ) : (
                 <Volume2 size={24} />
               )}
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         ))}
       </div>
 
-      <button onClick={() => setView('dashboard')} className="text-brand-olive hover:underline">
+      <motion.button
+        onClick={() => setView('dashboard')}
+        className="text-brand-clay hover:underline"
+        whileHover={{ scale: 1.05 }}
+      >
         Back to Dashboard
-      </button>
+      </motion.button>
     </div>
   );
 
