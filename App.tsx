@@ -123,10 +123,10 @@ export default function App() {
 
   const [stats, setStats] = useState<UserStats>(() => {
     return safeParse<UserStats>(localStorage.getItem('french_stats'), {
-      xp: 120,
-      level: 2,
-      streak: 5,
-      cardsMastered: 12,
+      xp: 0,
+      level: 1,
+      streak: 0,
+      cardsMastered: 0,
       lastActive: Date.now()
     });
   });
