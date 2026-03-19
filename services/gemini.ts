@@ -1,7 +1,10 @@
 import { GoogleGenAI, Modality, Type } from "@google/genai";
 import { Flashcard, QuizQuestion, DictionaryEntry } from "../types";
 
-const apiKey = process.env.GEMINI_API_KEY || '';
+const apiKey =
+  import.meta.env.VITE_GEMINI_API_KEY ||
+  process.env.GEMINI_API_KEY ||
+  '';
 const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 const demoFlashcards: Flashcard[] = [
