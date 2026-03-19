@@ -34,6 +34,16 @@ function cn(...inputs: ClassValue[]) {
 }
 
 export default function App() {
+  const safeParse = <T,>(value: string | null, fallback: T): T => {
+    if (!value) return fallback;
+    try {
+      return JSON.parse(value) as T;
+    } catch (error) {
+      console.warn('Invalid localStorage payload, using defaults.', error);
+      return fallback;
+    }
+  };
+
   const [view, setView] = useState<AppView>('dashboard');
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [favorites, setFavorites] = useState<Flashcard[]>([]);
@@ -59,14 +69,13 @@ export default function App() {
   const [audioLoading, setAudioLoading] = useState<string | null>(null);
 
   const [stats, setStats] = useState<UserStats>(() => {
-    const saved = localStorage.getItem('french_stats');
-    return saved ? JSON.parse(saved) : {
+    return safeParse<UserStats>(localStorage.getItem('french_stats'), {
       xp: 120,
       level: 2,
       streak: 5,
       cardsMastered: 12,
       lastActive: Date.now()
-    };
+    });
   });
 
   useEffect(() => {
@@ -74,8 +83,7 @@ export default function App() {
   }, [stats]);
 
   useEffect(() => {
-    const savedFavs = localStorage.getItem('french_favorites');
-    if (savedFavs) setFavorites(JSON.parse(savedFavs));
+    setFavorites(safeParse<Flashcard[]>(localStorage.getItem('french_favorites'), []));
   }, []);
 
   useEffect(() => {
