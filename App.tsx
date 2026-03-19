@@ -801,46 +801,67 @@ export default function App() {
         </motion.div>
       ) : quizQuestions.length > 0 ? (
         <div className="space-y-6">
-          <div className="glass-card p-8">
+          <div className="gradient-card p-8">
             <h3 className="text-2xl font-serif mb-8">{quizQuestions[currentQuizIndex].question}</h3>
             <div className="grid grid-cols-1 gap-4">
               {quizQuestions[currentQuizIndex].options.map((option, idx) => (
-                <button
+                <motion.button
                   key={idx}
                   onClick={() => handleOptionSelect(option)}
                   className={cn(
-                    "w-full p-4 text-left rounded-xl border transition-all",
-                    selectedOption === option 
-                      ? (option === quizQuestions[currentQuizIndex].correctAnswer ? "bg-emerald-50 border-emerald-500 text-emerald-700" : "bg-rose-50 border-rose-500 text-rose-700")
-                      : (selectedOption && option === quizQuestions[currentQuizIndex].correctAnswer ? "bg-emerald-50 border-emerald-500 text-emerald-700" : "bg-white border-brand-olive/10 hover:border-brand-olive/30")
+                    "w-full p-4 text-left rounded-xl border-2 transition-all font-medium",
+                    selectedOption === option
+                      ? (option === quizQuestions[currentQuizIndex].correctAnswer
+                        ? "bg-gradient-to-r from-brand-green/20 to-brand-green/10 border-brand-green text-brand-green"
+                        : "bg-gradient-to-r from-rose-500/20 to-rose-500/10 border-rose-500 text-rose-700")
+                      : (selectedOption && option === quizQuestions[currentQuizIndex].correctAnswer
+                        ? "bg-gradient-to-r from-brand-green/20 to-brand-green/10 border-brand-green text-brand-green"
+                        : "bg-white border-brand-ink/10 hover:border-brand-clay hover:shadow-md")
                   )}
+                  whileHover={!selectedOption ? { scale: 1.02, x: 5 } : {}}
+                  whileTap={!selectedOption ? { scale: 0.98 } : {}}
+                  initial={{ x: -50, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: idx * 0.05 }}
                 >
                   <div className="flex items-center justify-between">
                     <span>{option}</span>
                     {selectedOption === option && (
-                      option === quizQuestions[currentQuizIndex].correctAnswer ? <CheckCircle2 size={20} /> : <XCircle size={20} />
+                      <motion.div
+                        initial={{ scale: 0, rotate: -180 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ type: "spring", stiffness: 200 }}
+                      >
+                        {option === quizQuestions[currentQuizIndex].correctAnswer ? (
+                          <CheckCircle2 size={20} />
+                        ) : (
+                          <XCircle size={20} />
+                        )}
+                      </motion.div>
                     )}
                   </div>
-                </button>
+                </motion.button>
               ))}
             </div>
           </div>
 
           <AnimatePresence>
             {showExplanation && (
-              <motion.div 
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                className="glass-card p-6 bg-brand-olive/5 border-brand-olive/20"
+              <motion.div
+                initial={{ height: 0, opacity: 0, y: -20 }}
+                animate={{ height: 'auto', opacity: 1, y: 0 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="gradient-card p-6 bg-gradient-to-r from-brand-purple/10 to-brand-blue/10 border-brand-clay/20"
               >
-                <p className="text-sm font-medium text-brand-olive mb-2 uppercase tracking-widest">Explanation</p>
+                <p className="text-sm font-medium text-brand-clay mb-2 uppercase tracking-widest">Explanation</p>
                 <p className="text-brand-ink/80">{quizQuestions[currentQuizIndex].explanation}</p>
-                <button 
+                <motion.button
                   onClick={nextQuizQuestion}
-                  className="mt-6 flex items-center gap-2 text-brand-olive font-bold hover:gap-3 transition-all"
+                  className="mt-6 flex items-center gap-2 text-brand-clay font-bold hover:gap-3 transition-all"
+                  whileHover={{ x: 5 }}
                 >
                   {currentQuizIndex === quizQuestions.length - 1 ? "Finish Quiz" : "Next Question"} <ArrowRight size={18} />
-                </button>
+                </motion.button>
               </motion.div>
             )}
           </AnimatePresence>
@@ -852,34 +873,50 @@ export default function App() {
   const renderGrammar = () => (
     <div className="max-w-3xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
-        <button onClick={() => setView('dashboard')} className="text-brand-olive flex items-center gap-2 hover:underline">
+        <motion.button
+          onClick={() => setView('dashboard')}
+          className="text-brand-clay flex items-center gap-2 hover:underline"
+          whileHover={{ x: -5 }}
+        >
           <RotateCcw size={18} /> Back
-        </button>
+        </motion.button>
         <div className="flex gap-2">
           {['Articles', 'Verbs', 'Gender', 'Plurals'].map(topic => (
-            <button 
+            <motion.button
               key={topic}
               onClick={() => loadGrammarTip(topic)}
               className={cn(
-                "px-4 py-1 rounded-full border text-sm transition-colors",
-                grammarTopic === topic ? "bg-brand-olive text-white border-brand-olive" : "border-brand-olive/20 hover:bg-brand-olive/5"
+                "px-4 py-1 rounded-full border text-sm transition-all font-medium",
+                grammarTopic === topic
+                  ? "gradient-bg text-white border-transparent shadow-lg"
+                  : "border-brand-clay/30 bg-white/50 hover:border-brand-clay hover:shadow-md"
               )}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               {topic}
-            </button>
+            </motion.button>
           ))}
         </div>
       </div>
 
-      <div className="glass-card p-12 min-h-[400px]">
+      <div className="gradient-card p-12 min-h-[400px]">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-olive"></div>
+            <motion.div
+              className="h-12 w-12 border-4 border-brand-clay border-t-transparent rounded-full"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            />
           </div>
         ) : (
-          <div className="prose prose-lg max-w-none">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="prose prose-lg max-w-none"
+          >
             <ReactMarkdown>{grammarTip}</ReactMarkdown>
-          </div>
+          </motion.div>
         )}
       </div>
     </div>
@@ -888,40 +925,64 @@ export default function App() {
   const renderFavorites = () => (
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
-        <button onClick={() => setView('dashboard')} className="text-brand-olive flex items-center gap-2 hover:underline">
+        <motion.button
+          onClick={() => setView('dashboard')}
+          className="text-brand-clay flex items-center gap-2 hover:underline"
+          whileHover={{ x: -5 }}
+        >
           <RotateCcw size={18} /> Back
-        </button>
-        <h2 className="text-3xl font-serif">Your Favorites</h2>
+        </motion.button>
+        <h2 className="text-3xl font-serif gradient-text">Your Favorites</h2>
       </div>
 
       {favorites.length === 0 ? (
-        <div className="glass-card p-20 text-center space-y-4">
-          <Heart className="mx-auto text-brand-ink/10" size={64} />
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="gradient-card p-20 text-center space-y-4"
+        >
+          <motion.div
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <Heart className="mx-auto text-brand-clay/30" size={64} />
+          </motion.div>
           <p className="text-brand-ink/40 italic">You haven't bookmarked any phrases yet. Go to Vocabulary and click the heart icon!</p>
-        </div>
+        </motion.div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {favorites.map(card => (
-            <div key={card.id} className="glass-card p-6 flex items-center justify-between group hover:bg-white transition-all">
+          {favorites.map((card, idx) => (
+            <motion.div
+              key={card.id}
+              initial={{ x: -50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: idx * 0.05 }}
+              className="gradient-card p-6 flex items-center justify-between group hover:shadow-xl transition-all"
+              whileHover={{ y: -5 }}
+            >
               <div>
-                <h4 className="text-xl font-serif mb-1">{card.french}</h4>
+                <h4 className="text-xl font-serif gradient-text mb-1">{card.french}</h4>
                 <p className="text-sm text-brand-ink/40">{card.english}</p>
               </div>
               <div className="flex gap-2">
-                <button 
+                <motion.button
                   onClick={() => playAudio(card.french)}
-                  className="p-2 text-brand-olive/40 hover:text-brand-olive"
+                  className="p-2 text-brand-clay/60 hover:text-brand-clay"
+                  whileHover={{ scale: 1.2 }}
+                  whileTap={{ scale: 0.9 }}
                 >
                   <Volume2 size={20} />
-                </button>
-                <button 
+                </motion.button>
+                <motion.button
                   onClick={() => toggleFavorite(card)}
                   className="p-2 text-rose-500"
+                  whileHover={{ scale: 1.2, rotate: 10 }}
+                  whileTap={{ scale: 0.9 }}
                 >
                   <Heart fill="currentColor" size={20} />
-                </button>
+                </motion.button>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       )}
@@ -929,80 +990,120 @@ export default function App() {
   );
 
   const renderTutor = () => (
-    <div className="max-w-3xl mx-auto h-[calc(100vh-12rem)] flex flex-col glass-card overflow-hidden">
-      <div className="p-6 border-b border-brand-olive/10 flex items-center justify-between bg-white/50">
+    <div className="max-w-3xl mx-auto h-[calc(100vh-12rem)] flex flex-col gradient-card overflow-hidden">
+      <div className="p-6 border-b border-brand-clay/10 flex items-center justify-between bg-white/50">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-brand-olive/20 flex items-center justify-center text-brand-olive">
+          <motion.div
+            className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-clay to-brand-purple flex items-center justify-center text-white"
+            whileHover={{ scale: 1.1, rotate: 10 }}
+          >
             <GraduationCap />
-          </div>
+          </motion.div>
           <div>
-            <h3 className="text-xl">Amélie</h3>
-            <p className="text-xs text-brand-olive/60">Your French Tutor • Online</p>
+            <h3 className="text-xl gradient-text">Amélie</h3>
+            <p className="text-xs text-brand-clay/60">Your French Tutor • Online</p>
           </div>
         </div>
-        <button onClick={() => setView('dashboard')} className="text-brand-ink/40 hover:text-brand-ink">
+        <motion.button
+          onClick={() => setView('dashboard')}
+          className="text-brand-ink/40 hover:text-brand-ink"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+        >
           Close
-        </button>
+        </motion.button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {chatMessages.length === 0 && (
-          <div className="text-center py-12 space-y-4">
-            <Languages className="mx-auto text-brand-olive/20" size={48} />
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="text-center py-12 space-y-4"
+          >
+            <motion.div
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <Languages className="mx-auto text-brand-clay/30" size={48} />
+            </motion.div>
             <p className="text-brand-ink/40 italic">Start a conversation in French! Try saying "Bonjour, comment vas-tu ?"</p>
-          </div>
+          </motion.div>
         )}
-        {chatMessages.map(msg => (
-          <div key={msg.id} className={cn(
-            "flex",
-            msg.role === 'user' ? "justify-end" : "justify-start"
-          )}>
+        {chatMessages.map((msg, idx) => (
+          <motion.div
+            key={msg.id}
+            initial={{ x: msg.role === 'user' ? 50 : -50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: idx * 0.05 }}
+            className={cn(
+              "flex",
+              msg.role === 'user' ? "justify-end" : "justify-start"
+            )}
+          >
             <div className={cn(
               "max-w-[80%] p-4 rounded-2xl",
-              msg.role === 'user' 
-                ? "bg-brand-olive text-white rounded-tr-none" 
-                : "bg-white border border-brand-olive/10 rounded-tl-none"
+              msg.role === 'user'
+                ? "gradient-bg text-white rounded-tr-none shadow-lg"
+                : "bg-white border border-brand-clay/20 rounded-tl-none shadow-md"
             )}>
               <div className="prose prose-sm max-w-none dark:prose-invert">
                 <ReactMarkdown>{msg.text}</ReactMarkdown>
               </div>
               {msg.role === 'model' && (
-                <button 
+                <motion.button
                   onClick={() => playAudio(msg.text.split('\n')[0])}
-                  className="mt-2 text-brand-olive/60 hover:text-brand-olive"
+                  className="mt-2 text-brand-clay/60 hover:text-brand-clay"
+                  whileHover={{ scale: 1.2 }}
+                  whileTap={{ scale: 0.9 }}
                 >
                   <Volume2 size={16} />
-                </button>
+                </motion.button>
               )}
             </div>
-          </div>
+          </motion.div>
         ))}
         {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-white border border-brand-olive/10 p-4 rounded-2xl rounded-tl-none animate-pulse">
-              Amélie is typing...
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex justify-start"
+          >
+            <div className="bg-white border border-brand-clay/20 p-4 rounded-2xl rounded-tl-none">
+              <motion.div className="flex gap-1">
+                {[0, 1, 2].map((i) => (
+                  <motion.div
+                    key={i}
+                    className="w-2 h-2 bg-brand-clay rounded-full"
+                    animate={{ y: [0, -10, 0] }}
+                    transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.1 }}
+                  />
+                ))}
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         )}
       </div>
 
-      <div className="p-6 bg-white/50 border-t border-brand-olive/10">
+      <div className="p-6 bg-white/50 border-t border-brand-clay/10">
         <div className="flex gap-4">
-          <input 
+          <input
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
             placeholder="Type your message in French..."
-            className="flex-1 bg-white border border-brand-olive/20 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-olive/20"
+            className="flex-1 bg-white border-2 border-brand-clay/20 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-clay/40 focus:border-brand-clay"
           />
-          <button 
+          <motion.button
             onClick={handleSendMessage}
             disabled={isLoading || !inputMessage.trim()}
-            className="bg-brand-olive text-white px-6 py-3 rounded-xl hover:bg-brand-olive/90 disabled:opacity-50 transition-all"
+            className="gradient-bg text-white px-6 py-3 rounded-xl hover:shadow-xl disabled:opacity-50 transition-all font-semibold"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             Send
-          </button>
+          </motion.button>
         </div>
       </div>
     </div>
